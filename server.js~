@@ -12,7 +12,9 @@ res.end();
 }
 app.get('/',function(req, res){
 	fs.appendFile('readme.txt','Here me', function(error){
-		if(error) throw error;
+		if(error){
+			return console.log(error);
+		}
 		console.log("The file was save!");
 	});
 	fs.readFile('readme.txt',function(error, data){
