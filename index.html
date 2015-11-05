@@ -1,3 +1,133 @@
-<htmL><head></head>
-<body><h1>Tao VirtualHost Thanh Cong! </h1></body>
+<!doctype html>
+<html>
+
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font: 13px Helvetica, Arial; }
+	.formchat_all{position: absolute;right: 0;bottom: 0;}
+    .room_chat{width: 175px;position: absolute;left: 0;height: 100%;background: #ccc;}
+	.formchat{    position: relative;
+    display: block;
+    right: 0;
+    bottom: 0;
+    height: 270px;
+    width: 245px;
+    border: 1px #ccc solid;
+    float: right;
+    margin-left: 10px;
+    margin-right: 5px;}
+	.show_meg{width: 92%;margin: 0 auto;}
+	.send, .resend{bottom: 0;position: absolute;width: 100%;padding: 10px 5px;border: 0;border-top: 1px #ccc solid;}
+	.title{padding: 7px 10px;background: #ccc;}
+	.line_room{padding: 10px;cursor: pointer;}
+	.line_msg{padding: 5px 0;}
+    .full_msg{max-height: 200px;overflow: scroll;overflow-x: hidden;}
+	.btnsend{background: #4A9BFF;border: 0;padding: 7px 40px;margin-left: -5px;color: #fff;}
+	.txtuser{padding: 5px;width: 175px;}
+</style>
+
+	</head>
+	<body>
+		<input type="text" placeholder="New text" class="txtuser"/>
+		<input type="button" placeholder="New text" class="btnsend" value="login"/>
+		<div class="room_chat">
+			<p class="line_room" onclick="append_formchat('tien');">Chat voi tien</p>
+			<p class="line_room" onclick="append_formchat('thanh');">Chat voi thanh</p>
+			<p class="line_room" onclick="append_formchat('linh');">Chat voi linh</p>
+		</div>
+		<div class="formchat_all" id="formchat_all">
+			
+		</div>
+		
+	</body>	
+	<script src="node_modules/socket.io/node_modules/socket.io-client/socket.io.js"></script>
+	<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+	<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+	<script>
+		var socket = io.connect('http://192.168.1.106:3000/');
+		var username;
+		function append_formchat(user){
+			if(username != ""){
+				var count = $('.' + user+username).length;
+				var rcount = $('.' + username+user).length;
+				if(count == 0 && rcount == 0 && user != username){
+					$('.formchat_all').append('<div class="formchat">'+
+						'<h4 class="title">Pong chat 1</h4>'+
+						'<div class="show_meg">'+
+							'<div class="full_msg '+user+username+'" id="'+user+username+'">'+
+								'<div class="line_msg">'+
+									'Chuc sinh nhat vui ve	'+			
+								'</div>'+
+							'</div>'+
+							
+						'</div>'+
+						'<input type="text" placeholder="New text" name="q" id="send" class="send" value1="'+user+'" />'+
+					'</div>');
+				}
+			}else{
+				alert("Vui long dang nhap !");
+			}
+		}
+		function append_formchat_conform(user,usernamecomform){
+			$('.formchat_all').append('<div class="formchat">'+
+				'<h4 class="title">Pong chat 1</h4>'+
+				'<div class="show_meg">'+
+					'<div class="full_msg '+user+usernamecomform+'" id="'+user+usernamecomform+'">'+
+						'<div class="line_msg">'+
+							'Chuc sinh nhat vui ve	'+			
+						'</div>'+
+					'</div>'+
+					
+				'</div>'+
+				'<input type="text" placeholder="New text" name="q" id="send" class="send" value1="'+usernamecomform+'" />'+
+			'</div>');
+		}
+		socket.on('send_mgs', function(usernameserver, user, msg){
+			if(usernameserver == username || user == username){
+				var count = $('.' + user+usernameserver).length;
+				var rcount = $('.' + usernameserver+user).length;
+				console.log("'"+user+usernameserver+"'");
+				if(count > 0){
+					$('.'+user+usernameserver).append('<div class="line_msg">'+msg+'</div>');					
+					var elem = document.getElementById(''+user+usernameserver);
+					elem.scrollTop = elem.scrollHeight;
+				}
+				if(rcount > 0){
+					$('.'+usernameserver+user).append('<div class="line_msg">'+msg+'</div>');
+					var elem = document.getElementById(''+usernameserver+user);
+					elem.scrollTop = elem.scrollHeight;
+				}
+				if(rcount == 0 && count == 0){
+					append_formchat_conform(user,usernameserver);
+					$('.'+user+usernameserver).append('<div class="line_msg">'+msg+'</div>');
+					var elem = document.getElementById(''+user+usernameserver);
+					elem.scrollTop = elem.scrollHeight;
+				}
+			}
+		});
+		$(document).ready(function(){			
+			$('#formchat_all').on('click', '.send', function() {
+				$('input').removeClass('active_send');
+				$(this).addClass('active_send');
+			});
+			$('#formchat_all').on('keyup', '.send', function(event) {
+				var msg = $(this).val();
+				var user = $(this).attr('value1');
+				if(event.keyCode == 13){ 
+					event.preventDefault();
+					socket.emit('send_mgs', user, msg)
+					$(this).val('');
+				}
+				
+			});
+			
+			$('.btnsend').click(function(){
+				username = $('.txtuser').val();
+				socket.emit('adduser', username);
+			});
+		});
+	</script>
+
 </html>
